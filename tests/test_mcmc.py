@@ -7,7 +7,14 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from mcmc import chi_squared, inverse_variance, gelman_rubin, lcdm_model  # noqa: E402
+from mcmc import (  # noqa: E402
+    chi_squared,
+    inverse_variance,
+    gelman_rubin,
+    lcdm_model,
+    best_fit,
+    information_criteria,
+)
 
 
 def test_gelman_rubin_identical_chains():
@@ -40,3 +47,20 @@ def test_chi_squared_known_value():
     H_true = lcdm_model([70.0, 0.3])(z)
     inv = inverse_variance(np.array([1.0, 1.0]))
     assert chi_squared(lcdm_model, [70.0, 0.3], (z, H_true), inv) == 0.0
+
+
+def test_information_criteria_known_values():
+    ic = information_criteria(chi2_min=10.0, k=3, n=36)
+    assert ic["aic"] == 10.0 + 2 * 3
+    assert np.isclose(ic["bic"], 10.0 + 3 * np.log(36))
+
+
+def test_best_fit_recovers_truth():
+    # Data generated exactly by the model -> chi^2_min ~ 0 and state ~ truth.
+    z = np.linspace(0.05, 2.0, 30)
+    truth = [70.0, 0.3]
+    H_true = lcdm_model(truth)(z)
+    inv = inverse_variance(np.full_like(z, 2.0))
+    state, chi2_min = best_fit(lcdm_model, [65.0, 0.25], (z, H_true), inv)
+    assert chi2_min < 1e-4
+    assert np.allclose(state, truth, atol=1e-2)

@@ -73,6 +73,34 @@ def plot_hz_band(z_obs, obs, errors, model, pooled, zvals=None,
     plt.show()
 
 
+def plot_model_comparison(table, out=None):
+    """Bar chart of dAIC / dBIC per model (lower is better; best sits at 0).
+
+    Guide lines at Delta = 2, 6, 10 mark the usual evidence thresholds against
+    the higher-criterion model.
+    """
+    models = list(table.index)
+    x = np.arange(len(models))
+    width = 0.38
+
+    fig, ax = plt.subplots(figsize=(7, 5))
+    ax.bar(x - width / 2, table["dAIC"], width, label=r"$\Delta$AIC", color="#1D267D")
+    ax.bar(x + width / 2, table["dBIC"], width, label=r"$\Delta$BIC", color="#D4ADFC")
+    for thr in (2, 6, 10):
+        ax.axhline(thr, color="gray", ls="--", lw=0.8, alpha=0.6)
+        ax.text(len(models) - 0.5, thr, f" Δ={thr}", va="center", fontsize=8, color="gray")
+    ax.set_xticks(x)
+    ax.set_xticklabels(models)
+    ax.set_ylabel(r"$\Delta$ (relative to best model)")
+    ax.set_title("Model selection: ΛCDM vs CPL")
+    ax.legend()
+    ax.grid(axis="y", alpha=0.3)
+    fig.tight_layout()
+    if out:
+        fig.savefig(out, dpi=120)
+    plt.show()
+
+
 def create_marginal(x_data, y_data, x_name, y_name):
     """Joint + marginal posterior for two parameters (median reference lines)."""
     sns.set(style="whitegrid", context="paper")

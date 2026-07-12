@@ -1,7 +1,14 @@
 """Monte Carlo methods for Bayesian inference, applied to H(z) cosmology."""
 
 from .models import lcdm_model, cpl_model, generalized_model
-from .inference import chi_squared, log_likelihood, inverse_variance
+from .inference import (
+    chi_squared,
+    log_likelihood,
+    inverse_variance,
+    best_fit,
+    information_criteria,
+    model_selection_table,
+)
 from .sampler import (
     metropolis_hastings,
     run_chains,
@@ -13,6 +20,7 @@ from .plotting import (
     plot_traces,
     plot_gelman_rubin,
     plot_hz_band,
+    plot_model_comparison,
     create_marginal,
 )
 
@@ -23,6 +31,9 @@ __all__ = [
     "chi_squared",
     "log_likelihood",
     "inverse_variance",
+    "best_fit",
+    "information_criteria",
+    "model_selection_table",
     "metropolis_hastings",
     "run_chains",
     "gelman_rubin",
@@ -31,5 +42,6 @@ __all__ = [
     "plot_traces",
     "plot_gelman_rubin",
     "plot_hz_band",
+    "plot_model_comparison",
     "create_marginal",
 ]
