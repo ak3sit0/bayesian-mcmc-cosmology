@@ -1,5 +1,9 @@
 # Bayesian MCMC for cosmology
 
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+[![License: CC0-1.0](https://img.shields.io/github/license/ak3sit0/bayesian-mcmc-cosmology)](LICENSE)
+![Last commit](https://img.shields.io/github/last-commit/ak3sit0/bayesian-mcmc-cosmology)
+
 **Monte Carlo methods for Bayesian inference: a from-scratch Metropolis–Hastings
 test of dark energy evolution.**
 
