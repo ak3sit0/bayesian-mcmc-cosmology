@@ -3,16 +3,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import gaussian_kde
 
 
-def plot_traces(chains, names, burn_in=None, out=None):
-    """Overlay every chain's trajectory, one panel per parameter."""
+def plot_traces(chains, names, burn_in=None, out=None, max_points=1000):
+    """Overlay every chain's trajectory, one panel per parameter.
+
+    Chains are thinned to at most ``max_points`` points *for display only*, so
+    the embedded PNG stays light (the diagnostic shape is unchanged).
+    """
     p = len(names)
-    fig, axes = plt.subplots(p, 1, figsize=(9, 2.2 * p), sharex=True)
+    step = max(1, len(chains[0]) // max_points)
+    x = np.arange(0, len(chains[0]), step)
+    fig, axes = plt.subplots(p, 1, figsize=(9, 2.2 * p), sharex=True, dpi=80)
     axes = np.atleast_1d(axes)
     for j, (ax, name) in enumerate(zip(axes, names)):
         for chain in chains:
-            ax.plot(chain[:, j], lw=0.5, alpha=0.5)
+            ax.plot(x, chain[::step, j], lw=0.5, alpha=0.5)
         if burn_in:
             ax.axvline(burn_in, color="k", ls="--", lw=1, label="burn-in")
         ax.set_ylabel(f"${name}$")
@@ -101,13 +108,43 @@ def plot_model_comparison(table, out=None):
     plt.show()
 
 
+def _credible_contours(ax, x, y, grid=120):
+    """Fill the 68% and 95% highest-density credible regions of a 2D posterior.
+
+    Uses a Gaussian KDE evaluated on a grid; the contour levels are the density
+    thresholds that enclose 68% and 95% of the total probability mass. This is
+    the standard corner-plot look and is faithful to non-Gaussian posteriors
+    (unlike a covariance ellipse).
+    """
+    kde = gaussian_kde(np.vstack([x, y]))
+    xi = np.linspace(x.min(), x.max(), grid)
+    yi = np.linspace(y.min(), y.max(), grid)
+    X, Y = np.meshgrid(xi, yi)
+    Z = kde(np.vstack([X.ravel(), Y.ravel()])).reshape(X.shape)
+
+    order = np.sort(Z.ravel())[::-1]
+    cum = np.cumsum(order) / order.sum()
+    l68 = order[np.searchsorted(cum, 0.68)]
+    l95 = order[np.searchsorted(cum, 0.95)]
+
+    ax.contourf(X, Y, Z, levels=[l95, l68, Z.max()],
+                colors=["#bcd4f0", "#3b78c3"], alpha=0.9)
+    ax.contour(X, Y, Z, levels=[l95, l68], colors="#0C134F", linewidths=1)
+
+
 def create_marginal(x_data, y_data, x_name, y_name):
-    """Joint + marginal posterior for two parameters (median reference lines)."""
-    sns.set(style="whitegrid", context="paper")
-    g = sns.JointGrid(x=x_data, y=y_data)
+    """Joint + marginal posterior for two parameters.
+
+    The joint panel shows the 68% / 95% credible regions; the marginals are
+    histograms with a KDE and a dashed median line.
+    """
+    sns.set_theme(style="whitegrid", context="paper")
+    x = np.asarray(x_data)
+    y = np.asarray(y_data)
+    g = sns.JointGrid(x=x, y=y)
     g.plot_marginals(sns.histplot, kde=True, color="Blue", bins=30, discrete=False)
-    g.plot_joint(sns.kdeplot, fill=True, cmap="Blues", levels=4, thresh=0.0005)
-    g.ax_marg_x.axvline(np.median(x_data), color="#0C134F", linestyle="--")
-    g.ax_marg_y.axhline(np.median(y_data), color="#0C134F", linestyle="--")
+    _credible_contours(g.ax_joint, x, y)
+    g.ax_marg_x.axvline(np.median(x), color="#0C134F", linestyle="--")
+    g.ax_marg_y.axhline(np.median(y), color="#0C134F", linestyle="--")
     g.set_axis_labels(f"${x_name}$", f"${y_name}$", fontsize=14)
     plt.show()
