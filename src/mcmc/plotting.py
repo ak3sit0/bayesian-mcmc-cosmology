@@ -132,11 +132,12 @@ def _credible_contours(ax, x, y, grid=120):
     ax.contour(X, Y, Z, levels=[l95, l68], colors="#0C134F", linewidths=1)
 
 
-def create_marginal(x_data, y_data, x_name, y_name):
+def create_marginal(x_data, y_data, x_name, y_name, out=None):
     """Joint + marginal posterior for two parameters.
 
     The joint panel shows the 68% / 95% credible regions; the marginals are
-    histograms with a KDE and a dashed median line.
+    histograms with a KDE and a dashed median line. If ``out`` is given, the
+    figure is also saved there.
     """
     sns.set_theme(style="whitegrid", context="paper")
     x = np.asarray(x_data)
@@ -147,4 +148,6 @@ def create_marginal(x_data, y_data, x_name, y_name):
     g.ax_marg_x.axvline(np.median(x), color="#0C134F", linestyle="--")
     g.ax_marg_y.axhline(np.median(y), color="#0C134F", linestyle="--")
     g.set_axis_labels(f"${x_name}$", f"${y_name}$", fontsize=14)
+    if out:
+        g.savefig(out, dpi=120, bbox_inches="tight")
     plt.show()
