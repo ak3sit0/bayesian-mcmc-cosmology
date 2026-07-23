@@ -169,3 +169,7 @@ plan.md
 notes/
 *.private.md
 TODO.private*
+
+# Generated figures — do not upload; keep only the one shown in the README
+figures/*
+!figures/LCDM_confidence_intervals.png
